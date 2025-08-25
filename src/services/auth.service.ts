@@ -9,11 +9,17 @@ import { createTokenPair } from '~/utils/jwt'
 import keyTokenService from '~/services/token.service'
 import { getInfoData } from '~/utils/info'
 import { logger } from '~/log/logger'
+import { BadRequestError } from '~/middleware/error.middleware'
 type userData = Pick<IUser, 'email' | 'password' | 'role'>
 class AuthService {
   registerUser = async ({ email, password, role }: userData) => {
     const username = await genUsername()
     const hashPw = await hashPassword(password)
+    const foundUser = await mongoDB.user.findOne({ email: email })
+    if (foundUser) {
+      logger.warn('Email đã tồn tại trong hệ thống')
+      throw new BadRequestError('Email đã tồn tại trong hệ thống') // Ném lỗi thay vì return
+    }
     const newUser = await mongoDB.user.create({
       username,
       email,

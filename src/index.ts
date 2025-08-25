@@ -8,6 +8,7 @@ import mongoDB from '~/db/mongoDatabase'
 import { logger } from '~/log/logger'
 import routes from '~/routes'
 import 'dotenv/config'
+import { errorHandler } from '~/middleware/error.middleware'
 const app = express()
 const PORT = process.env.PORT || 3000
 app.use(helmet())
@@ -20,12 +21,14 @@ app.use(
     extended: true
   })
 )
+//
 app.use(limiter)
 //connect mongo
 mongoDB.connect()
 //routes
 app.use('/', routes)
-//logger
+//error
+app.use(errorHandler)
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`)
 })

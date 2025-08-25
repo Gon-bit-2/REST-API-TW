@@ -1,5 +1,5 @@
 'use strict'
-
+import { Response, Request, NextFunction } from 'express'
 import { reasonPhrases } from '~/utils/reasonPhrases'
 import { statusCodes } from '~/utils/statusCodes'
 
@@ -45,6 +45,12 @@ class ServerErrorResponse extends ErrorResponse {
   constructor(message = reasonPhrases.INTERNAL_SERVER_ERROR, statusCode = statusCodes.INTERNAL_SERVER_ERROR) {
     super(message, statusCode)
   }
+}
+export function errorHandler(err: any, req: Request, res: Response, next: NextFunction) {
+  res.status(err.status || 500).json({
+    status: err.status || 500,
+    message: err.message || 'Internal Server Error'
+  })
 }
 export {
   BadRequestError,

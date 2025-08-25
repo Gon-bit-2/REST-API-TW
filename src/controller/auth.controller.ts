@@ -18,7 +18,7 @@ export class AuthController {
       const newUser = await authService.registerUser({ email, password, role })
       new SuccessResponse({
         message: 'New User Created',
-        metadata: newUser
+        metadata: newUser.metadata
       }).send(res)
     } catch (error) {
       logger.error('Error during user registration', error)
