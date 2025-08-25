@@ -3,6 +3,9 @@ import { countConnection } from '~/utils/countConnection'
 import 'dotenv/config'
 import mongoose from 'mongoose'
 import { clientOptions } from '~/config/optionsDB'
+import userModel from '~/model/schema/user.model'
+import { logger } from '~/log/logger'
+import keyTokenModel from '~/model/schema/keyToken.model'
 const uri = `mongodb+srv://${process.env.MONGO_DB_USERNAME}:${process.env.MONGO_DB_PASSWORD}@blog-api.pvg58sk.mongodb.net/`
 class MongoDB {
   constructor() {
@@ -12,9 +15,9 @@ class MongoDB {
     try {
       await mongoose.connect(uri, clientOptions)
       countConnection()
-      console.log(`Connected MongoDB successfully`)
+      logger.info(`Connected MongoDB successfully`)
     } catch (error) {
-      console.log('Connected Failed ', error)
+      logger.error('Connected Failed ', error)
     }
   }
   async disConnect(): Promise<void> {
@@ -27,6 +30,13 @@ class MongoDB {
       }
       console.log('DisConnect Failed ', error)
     }
+  }
+
+  get user() {
+    return userModel
+  }
+  get token() {
+    return keyTokenModel
   }
 }
 const mongoDB = new MongoDB()

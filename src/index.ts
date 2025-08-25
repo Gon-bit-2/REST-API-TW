@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express'
+import express from 'express'
 import helmet from 'helmet'
 import cors from 'cors'
 import morgan from 'morgan'
@@ -6,8 +6,10 @@ import compression from 'compression'
 import limiter from '~/config/express-rate-limit'
 import mongoDB from '~/db/mongoDatabase'
 import { logger } from '~/log/logger'
+import routes from '~/routes'
+import 'dotenv/config'
 const app = express()
-
+const PORT = process.env.PORT || 3000
 app.use(helmet())
 app.use(cors())
 app.use(morgan('dev'))
@@ -21,9 +23,11 @@ app.use(
 app.use(limiter)
 //connect mongo
 mongoDB.connect()
+//routes
+app.use('/', routes)
 //logger
-app.listen(3000, () => {
-  console.log('Server is running on port 3000')
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`)
 })
 
 //handle shutdown server
