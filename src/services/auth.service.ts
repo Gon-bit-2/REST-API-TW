@@ -2,17 +2,17 @@
 
 import mongoDB from '~/db/mongoDatabase'
 import crypto from 'crypto'
-import { IUser } from '~/model/schema/user.model'
+import jwt from 'jsonwebtoken'
 import { genUsername } from '~/utils/genUserName'
-import { hashPassword } from '~/utils/hashPassword'
+import { comparePassword, hashPassword } from '~/utils/hashPassword'
 import { createTokenPair } from '~/utils/jwt'
 import keyTokenService from '~/services/token.service'
 import { getInfoData } from '~/utils/info'
 import { logger } from '~/log/logger'
-import { BadRequestError } from '~/middleware/error.middleware'
-type userData = Pick<IUser, 'email' | 'password' | 'role'>
+import { AuthFailureError, BadRequestError, ForbiddenError, ServerErrorResponse } from '~/middleware/error.middleware'
+import { LoginBodyType, RegisterBodyType } from '~/middleware/validator/auth.validator'
 class AuthService {
-  registerUser = async ({ email, password, role }: userData) => {
+  registerUser = async ({ email, password, role }: RegisterBodyType) => {
     const username = await genUsername()
     const hashPw = await hashPassword(password)
     const foundUser = await mongoDB.user.findOne({ email: email })
@@ -54,6 +54,62 @@ class AuthService {
     return {
       code: 200,
       metadata: null
+    }
+  }
+  async login({ email, password }: LoginBodyType) {
+    const foundUser = await mongoDB.user.findOne({
+      email
+    })
+    if (!foundUser) {
+      throw new Error('Người dùng chưa tồn tại')
+    }
+    // 2. So khớp mật khẩu
+    const isMatch = await comparePassword(password, foundUser.password)
+    if (!isMatch) throw new AuthFailureError('Sai thông tin xác thực')
+    //
+    const privateKey = crypto.randomBytes(64).toString('hex')
+    const publicKey = crypto.randomBytes(64).toString('hex')
+    const tokens = await createTokenPair({ userId: foundUser.id, email }, publicKey, privateKey)
+    const keyStore = await keyTokenService.createKeyToken({
+      userId: foundUser._id.toString(),
+      publicKey,
+      privateKey,
+      refreshToken: tokens.refreshToken
+    })
+    return {
+      code: 200,
+      metadata: {
+        user: getInfoData({ fields: ['_id', 'name', 'email'], object: foundUser }),
+        tokens
+      }
+    }
+  }
+  async refreshToken({ refreshToken, user, keyStore }) {
+    const { userId, email } = user
+
+    if (keyStore.refreshTokensUsed.includes(refreshToken)) {
+      await keyTokenService.deleteKeyById(userId)
+      throw new ForbiddenError('Something wrong happend !! Pls reLogin')
+    }
+    if (keyStore.refreshToken !== refreshToken) {
+      throw new AuthFailureError('Shop not registered 1')
+    }
+
+    //create token mới
+    const tokens = await createTokenPair({ userId, email }, keyStore.publicKey, keyStore.privateKey)
+    //update
+    await keyStore.updateOne({
+      $set: {
+        refreshToken: tokens.refreshToken
+      },
+      $addToSet: {
+        refreshTokensUsed: refreshToken //đã sử dụng lấy token mới nên add vô phần đã sử dụng
+      }
+    })
+
+    return {
+      user: { userId, email },
+      tokens
     }
   }
 }
