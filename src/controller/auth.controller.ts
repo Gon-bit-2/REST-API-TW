@@ -39,8 +39,6 @@ export class AuthController {
     }
   }
   async refreshToken(req: Request, res: Response): Promise<void> {
-    console.log('Check User::::', req.user)
-
     try {
       const tokens = await authService.refreshToken({
         refreshToken: req.refreshToken,
@@ -53,7 +51,19 @@ export class AuthController {
         metadata: tokens
       }).send(res)
     } catch (error) {
-      logger.error('Error during user registration', error)
+      logger.error('Error during user refreshToken', error)
+      throw new ServerErrorResponse()
+    }
+  }
+  async logout(req: Request, res: Response): Promise<void> {
+    try {
+      const handleLogout = await authService.logout({ user: req.user, refreshToken: req.refreshToken })
+      new SuccessResponse({
+        message: 'Logout Success',
+        metadata: handleLogout
+      }).send(res)
+    } catch (error) {
+      logger.error('Error during user logout', error)
       throw new ServerErrorResponse()
     }
   }

@@ -112,6 +112,30 @@ class AuthService {
       tokens
     }
   }
+  async logout({ user, refreshToken }) {
+    console.log('Check User:::', user)
+    console.log('Check User:::', refreshToken)
+
+    try {
+      if (!refreshToken) {
+        throw new BadRequestError('Token Không Hợp Lệ')
+      }
+      if (refreshToken) {
+        await mongoDB.token.deleteOne({
+          refreshToken
+        })
+        logger.info('Delete RefreshToken successfully', {
+          userId: user.userId,
+          token: refreshToken
+        })
+      }
+      return {
+        user: user.id
+      }
+    } catch (error) {
+      throw new Error('Server Error', { cause: error })
+    }
+  }
 }
 const authService = new AuthService()
 export default authService

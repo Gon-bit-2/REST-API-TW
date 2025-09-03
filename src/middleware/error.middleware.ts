@@ -17,7 +17,7 @@ class ConFlictRequestError extends ErrorResponse {
   }
 }
 class BadRequestError extends ErrorResponse {
-  constructor(message = reasonPhrases.FORBIDDEN, statusCode = statusCodes.FORBIDDEN) {
+  constructor(message = reasonPhrases.BAD_REQUEST, statusCode = statusCodes.BAD_REQUEST) {
     super(message, statusCode)
   }
 }
