@@ -6,6 +6,7 @@ import { clientOptions } from '~/config/optionsDB'
 import userModel from '~/model/schema/user.model'
 import { logger } from '~/log/logger'
 import keyTokenModel from '~/model/schema/keyToken.model'
+import blogModel from '~/model/schema/blog.model'
 const uri = `mongodb+srv://${process.env.MONGO_DB_USERNAME}:${process.env.MONGO_DB_PASSWORD}@blog-api.pvg58sk.mongodb.net/`
 class MongoDB {
   constructor() {
@@ -37,6 +38,9 @@ class MongoDB {
   }
   get token() {
     return keyTokenModel
+  }
+  get blog() {
+    return blogModel
   }
 }
 const mongoDB = new MongoDB()

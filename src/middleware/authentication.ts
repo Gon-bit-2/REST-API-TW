@@ -62,7 +62,7 @@ const authentication = async (req: Request, res: Response, next: NextFunction) =
     const keyStoreObject = keyStore.toObject()
 
     // Gán thông tin vào request và gọi next()
-    req.user = decodeUser
+    req.user = decodeUser.userId
     req.keyStore = keyStore
     return next()
   } catch (error) {
